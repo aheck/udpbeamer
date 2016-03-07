@@ -31,7 +31,7 @@ parser.add_argument('-w', '--write-pcap', default=False, action='store_true',
 
 args = parser.parse_args()
 udp_port = args.udp_port
-print "UDP PORT: %d" % (udp_port)
+print("UDP PORT: %d" % (udp_port))
 
 #if write_pcap:
     #announced_pcap = PcapWriter("announced.pcap", append=True, sync=True)
@@ -82,7 +82,7 @@ def run_tcp_server():
                 announced_packets_lock.release()
 
     except Exception:
-        print traceback.format_exc()
+        print(traceback.format_exc())
 
 def udp_monitor_callback(p):
     received_physically = time.time()
@@ -105,7 +105,7 @@ def udp_monitor_callback(p):
             captured_packets_lock.release()
 
 def run_capture():
-    print "Starting to capture packets..."
+    print("Starting to capture packets...")
     sniff(prn=udp_monitor_callback, filter="udp", store=0)
 
 capture_thread = thread.start_new_thread(run_capture, ())
@@ -139,11 +139,11 @@ def check_packet_arrivals():
         if entry['pkt_hash'] in captured_packets_dict:
             entry['seen_on_interface'] = True
 
-            print "Packet received: %s" % (packet_entry_str(entry))
+            print("Packet received: %s" % (packet_entry_str(entry)))
             continue
 
         if now - entry['received_over_tcp'] > 10:
-            print "\033[1;31mPacket missing > 10s: %s\033[0;0m" % (packet_entry_str(entry))
+            print("\033[1;31mPacket missing > 10s: %s\033[0;0m" % (packet_entry_str(entry)))
 
 while 1:
     time.sleep(2)
