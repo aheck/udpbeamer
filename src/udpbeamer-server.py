@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import argparse
 import hashlib
 import os
@@ -33,10 +35,18 @@ args = parser.parse_args()
 udp_port = args.udp_port
 print("UDP PORT: %d" % (udp_port))
 
-#if write_pcap:
-    #announced_pcap = PcapWriter("announced.pcap", append=True, sync=True)
-    #captured_pcap = PcapWriter("captured.pcap", append=True, sync=True)
-    #pktdump.write(pkt)
+if args.write_pcap:
+    try:
+        announced_pcap = PcapWriter("announced.pcap", append=True, sync=True)
+    except IOError:
+        print("ERROR: Failed to open file 'announced.pcap' for writing", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        captured_pcap = PcapWriter("captured.pcap", append=True, sync=True)
+    except IOError:
+        print("ERROR: Failed to open file 'captured.pcap' for writing", file=sys.stderr)
+        sys.exit(1)
 
 def packet_hash(packet):
     h = hashlib.sha1()
@@ -49,6 +59,8 @@ def packet_hash(packet):
     return h.hexdigest()
 
 def run_tcp_server():
+    global announced_pcap
+
     try:
         serversocket = socket.socket(
                 socket.AF_INET, socket.SOCK_STREAM)
@@ -78,6 +90,9 @@ def run_tcp_server():
             try:
                 announced_packets.append(pkt_entry)
                 announced_packets_dict[pkt_hash] = pkt_entry
+
+                if announced_pcap:
+                    announced_pcap.write(p)
             finally:
                 announced_packets_lock.release()
 
@@ -85,6 +100,8 @@ def run_tcp_server():
         print(traceback.format_exc())
 
 def udp_monitor_callback(p):
+    global captured_pcap
+
     received_physically = time.time()
 
     if UDP in p and p[UDP].dport == udp_port:
@@ -101,12 +118,20 @@ def udp_monitor_callback(p):
         try:
             captured_packets.append(pkt_entry)
             captured_packets_dict[pkt_hash] = pkt_entry
+
+            if captured_pcap:
+                captured_pcap.write(p)
         finally:
             captured_packets_lock.release()
 
 def run_capture():
     print("Starting to capture packets...")
-    sniff(prn=udp_monitor_callback, filter="udp", store=0)
+    try:
+        sniff(prn=udp_monitor_callback, filter="udp", store=0)
+    except socket.error:
+        print("ERROR: Failed to open network interfaces for capturing", file=sys.stderr)
+        print("Are you root?", file=sys.stderr)
+        os._exit(1)
 
 capture_thread = thread.start_new_thread(run_capture, ())
 
