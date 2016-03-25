@@ -8,6 +8,8 @@ problem with your software or your operating system or if there is a UDP related
 network problem and the problem only occurs at random times. Such a problem can
 be quite hard to debug.
 
+![How udpbeamer works](/pics/udpbeamer.png)
+
 With *udpbeamer* you install a little agent program simply named *udpbeamer*
 (written in C) on machine A. It captures the UDP packets in question with
 *libpcap*. Each packet is sent over a TCP connection to machine B. On this
