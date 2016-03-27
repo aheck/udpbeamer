@@ -17,3 +17,7 @@ machine the server component named *udpbeamer-server.py* (written in Python)
 is running. It sniffs for the incoming UDP packets and compares them to the
 packets the agent announced to it on the TCP connection. If a packet got
 announced but never arrives on machine B the server prints a warning.
+
+## Contact ##
+
+Andreas Heck <<aheck@gmx.de>>
